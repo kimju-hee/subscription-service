@@ -59,5 +59,14 @@ public class PolicyHandler {
         // Sample Logic //
         User.guideFeeConversionSuggestion(event);
     }
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='SubscriptionCanceled'")
+    public void onSubscriptionCanceled(@Payload SubscriptionCanceled event) {
+        if (!event.validate()) return;
+
+        System.out.println("SubscriptionCanceled 이벤트 수신됨: " + event);
+
+        // 예시: 로그 남기기 or 사용자/구독 상태를 업데이트
+        // 추후 필요한 비즈니스 로직 연결 가능
+    }
 }
 //>>> Clean Arch / Inbound Adaptor
