@@ -2,6 +2,9 @@ package miniprojectjo.domain;
 
 import java.time.LocalDate;
 import java.util.*;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.*;
 import miniprojectjo.domain.*;
 import miniprojectjo.infra.AbstractEvent;
@@ -10,6 +13,7 @@ import miniprojectjo.infra.AbstractEvent;
 @Data
 @ToString
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubscriptionCanceled extends AbstractEvent {
 
     private Long id;
