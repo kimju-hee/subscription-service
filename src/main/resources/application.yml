@@ -18,7 +18,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: kafka:9092
         streams:
           binder:
             configuration:
@@ -47,11 +47,11 @@ logging:
 
 api:
   url: 
-    subscriber: localhost:8085 
+    subscriber: localhost:8080 
     
 
 server:
-  port: 8085
+  port: 8080
 
 ---
 
@@ -67,7 +67,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: kafka:9092
         streams:
           binder:
             configuration:
