@@ -37,5 +37,6 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      EXTERNAL_SUBSCRIPTION_URL: http://localhost:8080
       
   # docker-compose up 실행 시, kafka 빌드까지 실행
