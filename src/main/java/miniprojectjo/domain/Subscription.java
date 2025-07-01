@@ -45,58 +45,78 @@ private BookId bookId;
     @Embedded
 private UserId userId;
 
-    // 구독 신청 도메인 행위
-    public void apply() {
-        if (Boolean.TRUE.equals(this.isSubscription)) {
-            throw new IllegalStateException("이미 구독 중입니다.");
-            // 이미 구독 중일 경우, 구독 신청하지 못하도록 막음     
-        }
-
-        if (point < cost) {
-            this.fail();
-            return;      // 포인트가 부족할 경우, 구독 실패함
-        }
-        // 아닐 경우, 정상적으로 구독 완료
-
-        this.isSubscription = true;
-        this.startSubscription = new Date();      // 구독 시작일
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(this.startSubscription);
-        cal.add(Calendar.DATE, 30); 
-        this.endSubscription = cal.getTime();  // 종료일은 구독 시작일로부터 30일 뒤로 설정
-
-        new SubscriptionApplied(this).publishAfterCommit();   // 구독 신청 이벤트 발행
-    }
-
-    // 구독 취소 도메인 행위
-    public void cancel() {
-        if (!Boolean.TRUE.equals(this.isSubscription)) {
-            throw new IllegalStateException("구독 상태가 아닙니다.");
-            // 구독 중이 아닐 경우, 구독 취소하지 못하도록 막음 
-        }
-
-        this.isSubscription = false;    // 구독 여부를 false로 변경
-        this.endSubscription = new Date();   // 종료일을 현재로 변경
-
-        new SubscriptionCanceled(this).publishAfterCommit();    // 구독 취소 이벤트 발행
-    }
-
-    // 구독 실패 도메인 행위
-    public void fail() {
-        this.isSubscription = false;   // 구독 여부를 false로 변경
-        new SubscriptionFailed(this).publishAfterCommit();     // 구독 실패 이벤트 발행
-    }
-
     @PostPersist
-    public void onPostPersist() {
-        // 이미 apply()에서 SubscriptionApplied 이벤트를 명시적으로 발행하고 있으므로, 생략 가능
+    public void onPostPersist(){
+        SubscriptionApplied subscriptionApplied = new SubscriptionApplied(this);
+        subscriptionApplied.publishAfterCommit();
+
+        // SubscriptionFailed subscriptionFailed = new SubscriptionFailed(this);
+        // subscriptionFailed.publishAfterCommit();
     }
 
-    public static SubscriptionRepository repository() {
-        return SubscriberApplication.applicationContext.getBean(SubscriptionRepository.class);
+    public static SubscriptionRepository repository(){
+        SubscriptionRepository subscriptionRepository = SubscriberApplication.applicationContext.getBean(SubscriptionRepository.class);
+        return subscriptionRepository;
     }
-}
+
+
+
+//<<< Clean Arch / Port Method
+    public void cancelSubscription(){
+        this.isSubscription = false;
+        this.endSubscription = new Date();
+        repository().save(this);
+        //implement business logic here:
+
+        miniprojectjo.external.SubscriptionQuery subscriptionQuery = new miniprojectjo.external.SubscriptionQuery();
+        // // subscriptionQuery.set??()        
+        //   = SubscriptionApplication.applicationContext
+        //     .getBean(miniprojectjo.external.Service.class)
+        //     .subscription(subscriptionQuery);
+        miniprojectjo.external.ExternalSubscriptionService  externalService = SubscriberApplication.applicationContext
+            .getBean(miniprojectjo.external.ExternalSubscriptionService .class);
+        externalService.subscription(subscriptionQuery);
+        SubscriptionCanceled subscriptionCanceled = new SubscriptionCanceled(this);
+        subscriptionCanceled.publishAfterCommit();
+    }
+//>>> Clean Arch / Port Method
+
+//<<< Clean Arch / Port Method
+    public static void failSubscription(OutOfPoint outOfPoint){
+        
+        //implement business logic here:
+        
+        /** Example 1:  new item 
+        Subscription subscription = new Subscription();
+        repository().save(subscription);
+
+        SubscriptionFailed subscriptionFailed = new SubscriptionFailed(subscription);
+        subscriptionFailed.publishAfterCommit();
+        */
+
+        /** Example 2:  finding and process*/
+        
+        // if outOfPoint.userIdsubscriptionId exists, use it
+        
+        // ObjectMapper mapper = new ObjectMapper();
+        // Map<Long, Object> pointMap = mapper.convertValue(outOfPoint.getUserId(), Map.class);
+        // Map<Long, Object> pointMap = mapper.convertValue(outOfPoint.getSubscriptionId(), Map.class);
+
+        repository().findById(outOfPoint.getSubscriptionId()).ifPresent(subscription->{
+            
+            subscription.isSubscription = false;
+            subscription.endSubscription = new Date(); // do something
+            repository().save(subscription);
+
+            SubscriptionFailed subscriptionFailed = new SubscriptionFailed(subscription);
+            subscriptionFailed.publishAfterCommit();
+
+         });
+        
+
+        
+    }
+//>>> Clean Arch / Port Method
 
 
 }
