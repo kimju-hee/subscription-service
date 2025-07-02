@@ -39,7 +39,10 @@ public class PolicyHandler {
         );
 
         // Sample Logic //
-        Subscription.failSubscription(event);
+        subscriptionRepository.findById(event.getSubscriptionId())
+            .ifPresent(subscription -> {
+                subscription.fail(event);  // ✅ 인스턴스 메서드 호출
+            });
     }
 
     @StreamListener(
@@ -69,4 +72,3 @@ public class PolicyHandler {
         // 추후 필요한 비즈니스 로직 연결 가능
     }
 }
-//>>> Clean Arch / Inbound Adaptor
