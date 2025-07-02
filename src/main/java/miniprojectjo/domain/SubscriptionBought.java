@@ -16,10 +16,11 @@ public class SubscriptionBought extends AbstractEvent {
 
     public SubscriptionBought(User aggregate) {
         super(aggregate);
+        this.id = aggregate.getId();
+        this.isPurchase = aggregate.getIsPurchase(); 
     }
 
     public SubscriptionBought() {
         super();
     }
 }
-//>>> DDD / Domain Event
