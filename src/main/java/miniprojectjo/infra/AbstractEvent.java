@@ -39,7 +39,7 @@ public class AbstractEvent {
 
         outputChannel.send(
             MessageBuilder
-                .withPayload(this)
+                .withPayload(this.toJson())
                 .setHeader(
                     MessageHeaders.CONTENT_TYPE,
                     MimeTypeUtils.APPLICATION_JSON
@@ -94,3 +94,4 @@ public class AbstractEvent {
     }
 }
 //>>> Clean Arch / Outbound Adaptor
+
