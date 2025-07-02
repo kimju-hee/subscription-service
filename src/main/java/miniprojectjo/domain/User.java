@@ -25,14 +25,30 @@ public class User {
 
     private String userName;
 
-    private Boolean isPurchase;
+    private Boolean isPurchase = false;
 
-    private String mseeage;
+    private String meseeage;
 
-    @PostPersist
-    public void onPostPersist() {
-        UserRegistered userRegistered = new UserRegistered(this);
+    public Long getId() {
+        return this.id;
+    }
+
+    // 회원가입 구현
+
+    public static User register(RegisterUserCommand command) {
+        User user = new User();
+        user.setEmail(command.getEmail());
+        user.setUserName(command.getUserName());
+        user.setIsPurchase(false); // 기본값
+        user.setMeseeage("회원가입 완료");
+
+        repository().save(user);
+
+        // 이벤트 발행
+        UserRegistered userRegistered = new UserRegistered(user);
         userRegistered.publishAfterCommit();
+
+        return user;
     }
 
     public static UserRepository repository() {
@@ -43,46 +59,14 @@ public class User {
     }
 
     //<<< Clean Arch / Port Method
-    public void buySubscription(BuySubscriptionCommand buySubscriptionCommand) {
-        //implement business logic here:
+    public void buySubscription() {
+        this.isPurchase = true;
 
-        SubscriptionBought subscriptionBought = new SubscriptionBought(this);
-        subscriptionBought.publishAfterCommit();
+        SubscriptionBought event = new SubscriptionBought(this);
+        event.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-
-    //<<< Clean Arch / Port Method
-    public static void guideFeeConversionSuggestion(
-        SubscriptionFailed subscriptionFailed
-    ) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        User user = new User();
-        repository().save(user);
-
-        */
-
-        /** Example 2:  finding and process
-        
-        // if subscriptionFailed.bookIduserId exists, use it
-        
-        // ObjectMapper mapper = new ObjectMapper();
-        // Map<Long, Object> subscriptionMap = mapper.convertValue(subscriptionFailed.getBookId(), Map.class);
-        // Map<Long, Object> subscriptionMap = mapper.convertValue(subscriptionFailed.getUserId(), Map.class);
-
-        repository().findById(subscriptionFailed.get???()).ifPresent(user->{
-            
-            user // do something
-            repository().save(user);
-
-
-         });
-        */
-
-    }
-    //>>> Clean Arch / Port Method
+    public static void guideFeeConversionSuggestion(SubscriptionFailed subscriptionFailed){}
+    // User.java
 
 }
-//>>> DDD / Aggregate Root
