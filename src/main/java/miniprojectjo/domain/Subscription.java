@@ -13,111 +13,66 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 
 
-@Entity
+@Entity     //  JPA가 관리하는 DB 테이블 객체
 @Table(name="Subscription_table")
-@Data
-
-//<<< DDD / Aggregate Root
-public class Subscription  {
+@Data   //  Lombok이 getter/setter, toString, equals 등을 자동 생성
+public class Subscription {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    
-    
-    
-private Long id;    
-    
-    
-private Boolean isSubscription;    
-    
-    
-private Date startSubscription;    
-    
-    
-private Date endSubscription;    
-    
-    
-private String webUrl;    
-    
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    private Boolean isSubscription;
+
+    private Date startSubscription;
+    private Date endSubscription;
+
+    private String webUrl;
+
     @Embedded
-private BookId bookId;    
-    
+    private BookId bookId;
+
     @Embedded
-private UserId userId;
+    private UserId userId;     //  구독 대상 도서 ID와 사용자 ID
 
-    @PostPersist
-    public void onPostPersist(){
-        SubscriptionApplied subscriptionApplied = new SubscriptionApplied(this);
-        subscriptionApplied.publishAfterCommit();
+    // 도메인 중심 메서드
 
-        // SubscriptionFailed subscriptionFailed = new SubscriptionFailed(this);
-        // subscriptionFailed.publishAfterCommit();
+    // ✅ 구독 시작
+    public void apply() {
+        this.isSubscription = true;     // 상태를 true 로 전환
+        this.startSubscription = new Date();  // 시작일 설정
+        this.endSubscription = calculateEndDate();  // 종료일 설정
+
+        SubscriptionApplied event = new SubscriptionApplied(this);
+        event.publishAfterCommit();   // 이벤트 SubscriptionApplied를 생성하고 Kafka에 발행
     }
 
-    public static SubscriptionRepository repository(){
-        SubscriptionRepository subscriptionRepository = SubscriberApplication.applicationContext.getBean(SubscriptionRepository.class);
-        return subscriptionRepository;
+    // ✅ 구독 취소
+    public void cancel() {
+        this.isSubscription = false;    // 상태를 false 로 전환
+        this.endSubscription = new Date();  // 종료일 설정
+
+        SubscriptionCanceled event = new SubscriptionCanceled(this);
+        event.publishAfterCommit();   // 이벤트 SubscriptionCanceled를 생성하고 Kafka에 발행
     }
 
+    // ✅ 구독 실패 (정적 메서드 → 리팩토링)
+    public void fail(OutOfPoint outOfPoint) {
+        this.isSubscription = false;   // 상태를 false로 설정
+        this.endSubscription = new Date();  // 종료일 설정
 
-
-//<<< Clean Arch / Port Method
-    public void cancelSubscription(){
-        this.isSubscription = false;
-        this.endSubscription = new Date();
-        repository().save(this);
-        //implement business logic here:
-
-        miniprojectjo.external.SubscriptionQuery subscriptionQuery = new miniprojectjo.external.SubscriptionQuery();
-        // // subscriptionQuery.set??()        
-        //   = SubscriptionApplication.applicationContext
-        //     .getBean(miniprojectjo.external.Service.class)
-        //     .subscription(subscriptionQuery);
-        miniprojectjo.external.ExternalSubscriptionService  externalService = SubscriberApplication.applicationContext
-            .getBean(miniprojectjo.external.ExternalSubscriptionService .class);
-        externalService.subscription(subscriptionQuery);
-        SubscriptionCanceled subscriptionCanceled = new SubscriptionCanceled(this);
-        subscriptionCanceled.publishAfterCommit();
+        SubscriptionFailed failed = new SubscriptionFailed(this, "포인트 부족");
+        failed.publishAfterCommit();
     }
-//>>> Clean Arch / Port Method
-
-//<<< Clean Arch / Port Method
-    public static void failSubscription(OutOfPoint outOfPoint){
-        
-        //implement business logic here:
-        
-        /** Example 1:  new item 
-        Subscription subscription = new Subscription();
-        repository().save(subscription);
-
-        SubscriptionFailed subscriptionFailed = new SubscriptionFailed(subscription);
-        subscriptionFailed.publishAfterCommit();
-        */
-
-        /** Example 2:  finding and process*/
-        
-        // if outOfPoint.userIdsubscriptionId exists, use it
-        
-        // ObjectMapper mapper = new ObjectMapper();
-        // Map<Long, Object> pointMap = mapper.convertValue(outOfPoint.getUserId(), Map.class);
-        // Map<Long, Object> pointMap = mapper.convertValue(outOfPoint.getSubscriptionId(), Map.class);
-
-        repository().findById(outOfPoint.getSubscriptionId()).ifPresent(subscription->{
-            
-            subscription.isSubscription = false;
-            subscription.endSubscription = new Date(); // do something
-            repository().save(subscription);
-
-            SubscriptionFailed subscriptionFailed = new SubscriptionFailed(subscription);
-            subscriptionFailed.publishAfterCommit();
-
-         });
-        
-
-        
+    // 종료일 계산 함수
+    // 예시: 종료일은 시작일 기준 30일 뒤
+    private Date calculateEndDate() {
+        long duration = 1000L * 60 * 60 * 24 * 30;
+        return new Date(System.currentTimeMillis() + duration);
     }
-//>>> Clean Arch / Port Method
 
-
+    // ✅ Repository 접근 헬퍼
+    public static SubscriptionRepository repository() {
+        return SubscriberApplication.applicationContext.getBean(SubscriptionRepository.class);
+    }
 }
-//>>> DDD / Aggregate Root
