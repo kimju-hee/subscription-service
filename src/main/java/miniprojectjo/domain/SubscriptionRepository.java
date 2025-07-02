@@ -31,4 +31,8 @@ public interface SubscriptionRepository
         @Param("bookId") BookId bookId,
         @Param("userId") UserId userId
     );
+    // SubscriptionRepository.java
+    boolean existsByUserIdAndBookIdAndIsSubscription(UserId userId, BookId bookId, Boolean isSubscription);
+
 }
+
