@@ -48,6 +48,7 @@ public class UserController {
 
         // User의 isPurchase 상태 업데이트
         user.setPurchase(true);
+        user.setMessage("구독권 구매 완료");        
         userRepository.save(user);
 
         // SubscriptionBought 이벤트 발행
@@ -57,4 +58,3 @@ public class UserController {
         return user;
     }
 }
-
