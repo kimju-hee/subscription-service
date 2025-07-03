@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: subscription
+  name: subscriber
   labels:
-    app: subscription
+    app: subscriber
 spec:
   type: LoadBalancer
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8085
+      targetPort: 8085
   selector:
-    app: subscription
+    app: subscriber
