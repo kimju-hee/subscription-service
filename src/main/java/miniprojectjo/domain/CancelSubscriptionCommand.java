@@ -5,4 +5,7 @@ import java.util.*;
 import lombok.Data;
 
 @Data
-public class CancelSubscriptionCommand {}
+public class CancelSubscriptionCommand {
+    private Long userId;
+    private Long bookId;
+}
