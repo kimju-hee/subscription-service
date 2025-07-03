@@ -33,8 +33,15 @@ public class PolicyHandler {
 
         subscriptionRepository.findById(outOfPoint.getSubscriptionId())
             .ifPresent(subscription -> {
-                subscription.fail("포인트 부족");
-                subscriptionRepository.save(subscription);
+                userRepository.findById(subscription.getUserId().getId())
+                    .ifPresent(user -> {
+                        if (user.isPurchase()) {
+                            logger.warn("##### OutOfPoint event received for user with purchase pass. Subscription ID: {}, User ID: {}. Not failing subscription.", subscription.getId(), user.getId());
+                        } else {
+                            subscription.fail("포인트 부족");
+                            subscriptionRepository.save(subscription);
+                        }
+                    });
             });
     }
 
