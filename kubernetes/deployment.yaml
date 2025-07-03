@@ -20,22 +20,26 @@ spec:
           image: "project20registry.azurecr.io/subscriber:v1"
           ports:
             - containerPort: 8085
+
           env:
-            - name: external.subscriber.url
-              value: "http://localhost:8085"
+            - name: SERVER_ADDRESS
+              value: "0.0.0.0"
+            - name: SPRING_PROFILES_ACTIVE
+              value: docker
+
           readinessProbe:
             httpGet:
               path: '/actuator/health'
               port: 8085
-            initialDelaySeconds: 10
+            initialDelaySeconds: 90
             timeoutSeconds: 2
-            periodSeconds: 5
+            periodSeconds: 10
             failureThreshold: 10
           livenessProbe:
             httpGet:
               path: '/actuator/health'
               port: 8085
-            initialDelaySeconds: 120
+            initialDelaySeconds: 240
             timeoutSeconds: 2
-            periodSeconds: 5
+            periodSeconds: 10
             failureThreshold: 5
