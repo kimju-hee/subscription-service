@@ -21,7 +21,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: kafka.default.svc.cluster.local:9092
         streams:
           binder:
             configuration:
@@ -48,8 +48,4 @@ logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
-
-external:
-  subscription:
-    url: http://localhost:8085/ # 예시 URL
 
