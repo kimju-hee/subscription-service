@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class BuySubscriptionCommand {
 
-    private Boolean isPurchase;
+    private Long userId;
 }
