@@ -3,7 +3,6 @@ package miniprojectjo.domain;
 import java.time.LocalDate;
 import java.util.*;
 import lombok.*;
-import miniprojectjo.domain.*;
 import miniprojectjo.infra.AbstractEvent;
 
 //<<< DDD / Domain Event
@@ -11,13 +10,12 @@ import miniprojectjo.infra.AbstractEvent;
 @ToString
 public class SubscriptionBought extends AbstractEvent {
 
-    private Long id;
-    private Boolean isPurchase;
+    private Long userId;
+    private boolean isPurchase;
 
-    public SubscriptionBought(User aggregate) {
-        super(aggregate);
-        this.id = aggregate.getId();
-        this.isPurchase = aggregate.getIsPurchase(); 
+    public SubscriptionBought(Long userId, boolean isPurchase) {
+        this.userId = userId;
+        this.isPurchase = isPurchase;
     }
 
     public SubscriptionBought() {
