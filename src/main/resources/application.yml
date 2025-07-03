@@ -1,7 +1,7 @@
 server:
   error:
     include-message: always
-  port: 8080
+  port: 8085
 
 spring:
   application:
@@ -51,5 +51,5 @@ logging:
 
 external:
   subscription:
-    url: http://localhost:8080/ # 예시 URL
+    url: http://localhost:8085/ # 예시 URL
 
