@@ -56,12 +56,12 @@ public class Subscription {
         event.publishAfterCommit();   // 이벤트 SubscriptionCanceled를 생성하고 Kafka에 발행
     }
 
-    // ✅ 구독 실패 (정적 메서드 → 리팩토링)
-    public void fail(OutOfPoint outOfPoint) {
+    // ✅ 구독 실패
+    public void fail(String reason) {
         this.isSubscription = false;   // 상태를 false로 설정
         this.endSubscription = new Date();  // 종료일 설정
 
-        SubscriptionFailed failed = new SubscriptionFailed(this, "포인트 부족");
+        SubscriptionFailed failed = new SubscriptionFailed(this, reason);
         failed.publishAfterCommit();
     }
     // 종료일 계산 함수
@@ -71,8 +71,5 @@ public class Subscription {
         return new Date(System.currentTimeMillis() + duration);
     }
 
-    // ✅ Repository 접근 헬퍼
-    public static SubscriptionRepository repository() {
-        return SubscriberApplication.applicationContext.getBean(SubscriptionRepository.class);
-    }
+    
 }
