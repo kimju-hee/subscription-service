@@ -13,10 +13,11 @@ spec:
     metadata:
       labels:
         app: subscription
+        sidecar.istio.io/inject: "true"
     spec:
       containers:
         - name: subscription
-          image: "project20registry.azurecr.io/subscription:v1"
+          image: "project20registry.azurecr.io/subscription-service:v1"
           ports:
             - containerPort: 8080
           env:
