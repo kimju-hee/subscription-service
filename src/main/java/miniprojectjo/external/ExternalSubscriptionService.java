@@ -1,5 +1,7 @@
 package miniprojectjo.external;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -7,6 +9,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ExternalSubscriptionService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExternalSubscriptionService.class);
 
     @Value("${external.subscription.url}") // application.yml에서 주입받음
     private String subscriptionApiUrl;
@@ -28,15 +32,15 @@ public class ExternalSubscriptionService {
 
             // 성공 여부 확인 (예: HTTP 2xx 응답)
             if (response.getStatusCode().is2xxSuccessful()) {
-                System.out.println("✅ 외부 구독 API 호출 성공");
+                logger.info("✅ 외부 구독 API 호출 성공");
                 return true;
             } else {
-                System.out.println("⚠️ 외부 구독 API 호출 실패: " + response.getStatusCode());
+                logger.warn("⚠️ 외부 구독 API 호출 실패: {}", response.getStatusCode());
                 return false;
             }
 
         } catch (Exception e) {
-            System.out.println("❌ 외부 구독 API 예외 발생: " + e.getMessage());
+            logger.error("❌ 외부 구독 API 예외 발생", e);
             return false;
         }
     }
