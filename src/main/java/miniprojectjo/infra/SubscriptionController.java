@@ -31,6 +31,10 @@ public class SubscriptionController {
     @Autowired
     // 의존성 주입
     SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    UserRepository userRepository;
+
     // 도메인 로직을 직접 수행하지 않고, DB 엔티티와 상호작용함
 
 // ✅ [1] 구독 신청 API
@@ -39,15 +43,38 @@ public class SubscriptionController {
         UserId userId = new UserId(request.getUserId());
         BookId bookId = new BookId(request.getBookId());
 
-    // ✅ 이미 구독한 경우 예외
-    if (subscriptionRepository.existsByUserIdAndBookIdAndIsSubscription(userId, bookId, true)) {
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST, "이미 해당 도서를 구독 중입니다."
-        );
-    }
+        // 사용자 조회
+        User user = userRepository.findById(request.getUserId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 유저를 찾을 수 없습니다."));
 
+        // 이미 구독한 경우 예외
+        if (subscriptionRepository.existsByUserIdAndBookIdAndIsSubscription(userId, bookId, true)) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "이미 해당 도서를 구독 중입니다."
+            );
+        }
 
-    // ✅ 신규 구독 처리
+        // 구독권 유무에 따른 처리
+        if (!user.isPurchase()) {
+            // 구독권이 없는 경우, 포인트를 소비하여 도서를 구독하는 기능 (틀만 구현)
+            // 1. Subscription 객체를 먼저 생성하고 저장하여 ID를 확보
+            Subscription subscription = new Subscription();
+            subscription.setUserId(userId);
+            subscription.setBookId(bookId);
+            // subscription.apply(); // 포인트 차감 성공 시에만 apply 호출
+            subscriptionRepository.save(subscription); // 대기 상태로 저장
+
+            // 2. 외부 포인트 서비스로 포인트 차감 요청을 보냄
+            //    - request.getUserId(), request.getSubscriptionFee(), subscription.getId() 등을 사용하여 요청
+            //    - 예: RestTemplate, WebClient 등을 사용하여 외부 API 호출
+            //    - 외부 서비스는 이 요청을 처리 후 OutOfPoint 또는 PointDeducted 이벤트를 발행
+            System.out.println("외부 포인트 서비스로 포인트 차감 요청 위임: " + request.getSubscriptionFee() + " 포인트, 구독 ID: " + subscription.getId());
+
+            // 이 컨트롤러는 즉시 응답을 반환하고, 실제 구독 성공/실패는 비동기 이벤트에 의해 처리됨
+            return subscription;
+        }
+
+        // 신규 구독 처리 (구독권이 있는 경우)
         Subscription subscription = new Subscription();
         subscription.setUserId(userId);
         subscription.setBookId(bookId);
@@ -58,7 +85,7 @@ public class SubscriptionController {
 
 // ✅ [2] 구독 취소 API (리팩토링)
     @PutMapping("/{id}/cancel")
-    public Subscription cancelSubscription(@PathVariable Long id) throws Exception {
+    public Subscription cancelSubscription(@PathVariable Long id) {
         Subscription subscription = subscriptionRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "해당 구독을 찾을 수 없습니다.")
