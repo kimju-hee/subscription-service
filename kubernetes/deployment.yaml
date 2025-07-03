@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: subscriber
-          image: "project20registry.azurecr.io/subscription-service:v1"
+          image: "project20registry.azurecr.io/subscriber:v1"
           ports:
             - containerPort: 8085
           env:
