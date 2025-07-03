@@ -1,30 +1,26 @@
 package miniprojectjo.infra;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
 import javax.transaction.Transactional;
 import miniprojectjo.config.kafka.KafkaProcessor;
 import miniprojectjo.domain.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-//<<< Clean Arch / Inbound Adaptor
 @Service
 @Transactional
 public class PolicyHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(PolicyHandler.class);
 
     @Autowired
     UserRepository userRepository;
 
     @Autowired
     SubscriptionRepository subscriptionRepository;
-
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString) {}
 
     @StreamListener(
         value = KafkaProcessor.INPUT,
@@ -33,15 +29,12 @@ public class PolicyHandler {
     public void wheneverOutOfPoint_FailSubscription(
         @Payload OutOfPoint outOfPoint
     ) {
-        OutOfPoint event = outOfPoint;
-        System.out.println(
-            "\n\n##### listener FailSubscription : " + outOfPoint + "\n\n"
-        );
+        logger.info("##### listener FailSubscription : {}", outOfPoint);
 
-        // Sample Logic //
-        subscriptionRepository.findById(event.getSubscriptionId())
+        subscriptionRepository.findById(outOfPoint.getSubscriptionId())
             .ifPresent(subscription -> {
-                subscription.fail(event);  // ✅ 인스턴스 메서드 호출
+                subscription.fail("포인트 부족");
+                subscriptionRepository.save(subscription);
             });
     }
 
@@ -52,23 +45,34 @@ public class PolicyHandler {
     public void wheneverSubscriptionFailed_GuideFeeConversionSuggestion(
         @Payload SubscriptionFailed subscriptionFailed
     ) {
-        SubscriptionFailed event = subscriptionFailed;
-        System.out.println(
-            "\n\n##### listener GuideFeeConversionSuggestion : " +
-            subscriptionFailed +
-            "\n\n"
-        );
+        logger.info("##### listener GuideFeeConversionSuggestion : {}", subscriptionFailed);
 
-        // Sample Logic //
-        User.guideFeeConversionSuggestion(event);
+        userRepository.findById(subscriptionFailed.getUserId())
+            .ifPresent(user -> {
+                user.suggestFeeConversion();
+                userRepository.save(user);
+            });
     }
+
     @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='SubscriptionCanceled'")
     public void onSubscriptionCanceled(@Payload SubscriptionCanceled event) {
         if (!event.validate()) return;
 
-        System.out.println("SubscriptionCanceled 이벤트 수신됨: " + event);
+        logger.info("SubscriptionCanceled 이벤트 수신됨: {}", event);
 
         // 예시: 로그 남기기 or 사용자/구독 상태를 업데이트
         // 추후 필요한 비즈니스 로직 연결 가능
     }
+
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='SubscriptionBought'")
+    public void wheneverSubscriptionBought_UpdateUserPurchaseStatus(@Payload SubscriptionBought subscriptionBought) {
+        logger.info("##### listener UpdateUserPurchaseStatus : {}", subscriptionBought);
+
+        userRepository.findById(subscriptionBought.getUserId())
+            .ifPresent(user -> {
+                user.setPurchase(subscriptionBought.isPurchase());
+                userRepository.save(user);
+            });
+    }
 }
+
