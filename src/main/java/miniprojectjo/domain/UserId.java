@@ -9,4 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 public class UserId {
     private Long value;
+
+    public Long getId(){
+        return value;
+    }
 }
