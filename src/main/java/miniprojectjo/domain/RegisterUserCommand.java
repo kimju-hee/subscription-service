@@ -7,4 +7,6 @@ import lombok.Data;
 public class RegisterUserCommand {
     private String email;
     private String userName;
+    private String password;
 }
+
