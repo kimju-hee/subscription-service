@@ -26,6 +26,8 @@ spec:
               value: "0.0.0.0"
             - name: SPRING_PROFILES_ACTIVE
               value: docker
+            - name: external.subscription.url
+              value: http://localhost:8085
 
           readinessProbe:
             httpGet:
