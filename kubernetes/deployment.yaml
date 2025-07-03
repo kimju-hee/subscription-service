@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: subscription
+  name: subscriber
   labels:
-    app: subscription
+    app: subscriber
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: subscription
+      app: subscriber
   template:
     metadata:
       labels:
-        app: subscription
+        app: subscriber
         sidecar.istio.io/inject: "true"
     spec:
       containers:
-        - name: subscription
+        - name: subscriber
           image: "project20registry.azurecr.io/subscription-service:v1"
           ports:
-            - containerPort: 8080
+            - containerPort: 8085
           env:
-            - name: external.subscription.url
-              value: "http://localhost:8080"
+            - name: external.subscriber.url
+              value: "http://localhost:8085"
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8085
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -34,7 +34,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8085
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
