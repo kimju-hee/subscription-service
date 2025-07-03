@@ -49,3 +49,7 @@ logging:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
+external:
+  subscription:
+    url: http://localhost:8080/ # 예시 URL
+
