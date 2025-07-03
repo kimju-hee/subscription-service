@@ -1,13 +1,21 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: subscriber
+  # name: point
+  name: point-service # <-- Service 이름 변경
   labels:
-    app: subscriber
+    app: point
+# spec:
+#   ports:
+#     - port: 8080
+#       targetPort: 8080
+#   selector:
+#     app: point
 spec:
-  type: LoadBalancer
-  ports:
-    - port: 8085
-      targetPort: 8085
   selector:
-    app: subscriber
+    app: point # <-- Deployment의 label.app: point와 일치 (이건 맞음)
+  ports:
+    - protocol: TCP      # <-- 프로토콜 명시
+      port: 85           # <-- 외부 노출 포트를 80으로 변경
+      targetPort: 8085   # <-- Pod 내부 앱 포트 (이건 맞음)
+  type: LoadBalancer     # <-- LoadBalancer 타입 추가
