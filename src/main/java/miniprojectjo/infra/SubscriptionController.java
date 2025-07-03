@@ -63,15 +63,6 @@ public class SubscriptionController {
             subscription.setBookId(bookId);
             // subscription.apply(); // 포인트 차감 성공 시에만 apply 호출
             subscriptionRepository.save(subscription); // 대기 상태로 저장
-
-            // 2. 외부 포인트 서비스로 포인트 차감 요청을 보냄
-            //    - request.getUserId(), request.getSubscriptionFee(), subscription.getId() 등을 사용하여 요청
-            //    - 예: RestTemplate, WebClient 등을 사용하여 외부 API 호출
-            //    - 외부 서비스는 이 요청을 처리 후 OutOfPoint 또는 PointDeducted 이벤트를 발행
-            System.out.println("외부 포인트 서비스로 포인트 차감 요청 위임: " + request.getSubscriptionFee() + " 포인트, 구독 ID: " + subscription.getId());
-
-            // 이 컨트롤러는 즉시 응답을 반환하고, 실제 구독 성공/실패는 비동기 이벤트에 의해 처리됨
-            return subscription;
         }
 
         // 신규 구독 처리 (구독권이 있는 경우)
@@ -94,5 +85,21 @@ public class SubscriptionController {
         subscription.cancel(); // 도메인 메서드에서 이벤트 발행 포함
         return subscriptionRepository.save(subscription);
     }
+
+// ✅ [3] 사용자 ID와 도서 ID 기반 구독 취소 API
+    @PutMapping("/cancel-by-user-book")
+    public Subscription cancelSubscriptionByUserAndBook(@RequestBody CancelSubscriptionCommand command) {
+        UserId userId = new UserId(command.getUserId());
+        BookId bookId = new BookId(command.getBookId());
+
+        Subscription subscription = subscriptionRepository.findByUserIdAndBookIdAndIsSubscription(userId, bookId, true)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "해당 사용자 ID와 도서 ID에 대한 활성 구독을 찾을 수 없습니다.")
+            );
+
+        subscription.cancel(); // 도메인 메서드에서 이벤트 발행 포함
+        return subscriptionRepository.save(subscription);
+    }
 }
 //>>> Clean Arch / Inbound Adaptor
+
