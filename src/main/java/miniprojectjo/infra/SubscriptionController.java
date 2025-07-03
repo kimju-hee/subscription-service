@@ -85,21 +85,8 @@ public class SubscriptionController {
         subscription.cancel(); // 도메인 메서드에서 이벤트 발행 포함
         return subscriptionRepository.save(subscription);
     }
-
-// ✅ [3] 사용자 ID와 도서 ID 기반 구독 취소 API
-    @PutMapping("/cancel-by-user-book")
-    public Subscription cancelSubscriptionByUserAndBook(@RequestBody CancelSubscriptionCommand command) {
-        UserId userId = new UserId(command.getUserId());
-        BookId bookId = new BookId(command.getBookId());
-
-        Subscription subscription = subscriptionRepository.findByUserIdAndBookIdAndIsSubscription(userId, bookId, true)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "해당 사용자 ID와 도서 ID에 대한 활성 구독을 찾을 수 없습니다.")
-            );
-
-        subscription.cancel(); // 도메인 메서드에서 이벤트 발행 포함
-        return subscriptionRepository.save(subscription);
-    }
 }
 //>>> Clean Arch / Inbound Adaptor
+
+
 
