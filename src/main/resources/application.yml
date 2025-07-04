@@ -41,10 +41,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
-external:
-  subscription:
-    url: http://localhost:8085
+      
+api:
+  url:
+    author: http://author:8085
 
 logging:
   level:
