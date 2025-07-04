@@ -1,11 +1,9 @@
 server:
-  error:
-    include-message: always
   port: 8085
 
 spring:
   application:
-    name: subscriber
+    name: subscription
 
   profiles:
     active: default
@@ -32,7 +30,7 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
         event-in:
-          group: subscriber
+          group: subscription
           destination: miniprojectjo
           contentType: application/json
         event-out:
@@ -44,11 +42,21 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+external:
+  subscription:
+    url: http://localhost:8085
+
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
+    org.springframework.core.env: DEBUG
 
-external:
-  subscription:
-    url: http://localhost:8085
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
