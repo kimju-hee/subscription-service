@@ -1,21 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  # name: point
-  name: subscription # <-- Service 이름 변경
+  name: subscription
   labels:
     app: subscription
-# spec:
-#   ports:
-#     - port: 8080
-#       targetPort: 8080
-#   selector:
-#     app: point
 spec:
-  selector:
-    app: subscription # <-- Deployment의 label.app: point와 일치 (이건 맞음)
+  type: ClusterIP
   ports:
-    - protocol: TCP      # <-- 프로토콜 명시
-      port: 80           # <-- 외부 노출 포트를 80으로 변경
-      targetPort: 8085   # <-- Pod 내부 앱 포트 (이건 맞음)
-  type: LoadBalancer     # <-- LoadBalancer 타입 추가
+    - port: 8085
+      targetPort: 8085
+  selector:
+    app: subscription
