@@ -44,7 +44,7 @@ spring:
       
 api:
   url:
-    author: http://author:8085
+    author: http://subscription:8085
 
 logging:
   level:
